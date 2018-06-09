@@ -6,7 +6,7 @@
 
     <item
         android:id="@+id/menu_connect"
-        android:title="Connect device">
+        android:title="@string/menu_connect">
     </item>
 
 
@@ -18,7 +18,7 @@
 
         <item
             android:id="@+id/menu_disconnect"
-            android:title="Disconnect device">
+            android:title="@string/menu_disconnect">
         </item>
 
 

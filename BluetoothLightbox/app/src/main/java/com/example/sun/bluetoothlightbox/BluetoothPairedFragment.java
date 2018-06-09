@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 public class BluetoothPairedFragment extends DialogFragment implements View.OnClickListener {
 
-    final String TAG ="PairedBtDevicesFragment";
+    final String TAG ="clock_PairBtFragment";
     ListView devicelist;
     String[] default_list = {"There aren't any paired devices"};
     ArrayList<String> btDevicesList;

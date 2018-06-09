@@ -1,9 +1,13 @@
 <resources>
     <string name="app_name">BluetoothLightbox</string>
     <string name="pairedBt">Paired bluetooth devices</string>
+    <string name="menu_connect">Connect device</string>
+    <string name="menu_disconnect">Disconnect device</string>
     <string name="btnOk">OK</string>
     <string name="btnCancel">Cancel</string>
     <string name="fragment_Bt_paired_title">Select paired bluetooth device</string>
+    <string name="btConnected">Bluetooth device is connected</string>
+    <string name="btDisconnected">Bluetooth device is disconnected</string>
 
 
 </resources>

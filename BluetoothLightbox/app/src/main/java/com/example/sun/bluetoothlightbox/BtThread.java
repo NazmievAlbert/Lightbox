@@ -6,22 +6,55 @@ import android.os.ParcelUuid;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
-public class BtThread extends Thread {
-    final String TAG ="Bluetooth_thread_class" ;
-    int connectAttempts=0;
+
+
+public class BtThread extends Thread implements Interfaces.Observable
+ {
+    private List<Interfaces.Observer> observers;
+
+    final String TAG ="clock_bt_thread" ;
+    private int connectAttempts=0;
+    private String status = "created";
     private BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
     private boolean isConnectedFlag=false;
     private  UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
 
+
+
+
     public BtThread(BluetoothSocket socket, BluetoothDevice device) {
         mmSocket = socket;
         mmDevice= device;
+        observers = new LinkedList<>();
     }
 
+
+    @Override
+    public void registerObserver(Interfaces.Observer o) {
+        observers.add(o);
+    }
+
+    @Override
+    public void removeObserver(Interfaces.Observer o) {
+        observers.remove(o);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (Interfaces.Observer observer : observers)
+            observer.update(status);
+    }
+
+    public void sendStatus(String status){
+        this.status=status;
+        notifyObservers();
+    }
 
     public void run(){
         do
@@ -68,6 +101,7 @@ public class BtThread extends Thread {
         try {
             mmSocket.connect();
             Log.d(TAG, "Device is connected");
+            sendStatus("btThreadConnected");
             isConnectedFlag=true;
         } catch (IOException e) {
             result=false;
@@ -87,11 +121,17 @@ public class BtThread extends Thread {
         try {
             mmSocket.close();
             Log.d(TAG, "socket succesfully closed");
+            sendStatus("btThreadDisonnected");
+
         } catch (IOException e) {  Log.e(TAG, "unable to close socket" + e.getMessage() + ".");}
+
     }
 
 
     public void cancel() {
         disconnectBt();
     }
+
+
+
 }

@@ -4,17 +4,20 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class BluetoothPart {
+public class BluetoothPart implements Interfaces.Observer {
 
-    final String TAG ="Bluetooth_class";
+    final String TAG ="clock_bt_class";
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket bluetoothSocket =null;
@@ -24,9 +27,13 @@ public class BluetoothPart {
 
     public  BluetoothPart(){
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
     }
 
+
+    @Override
+    public void update(String status) {
+        Log.d(TAG,"GET INFO!!!! "+status);
+    }
 
     public boolean isBluetoothSupported(){
         if (bluetoothAdapter == null) {
@@ -60,6 +67,8 @@ public class BluetoothPart {
     }
 
     public boolean connectDevice(String MAC){
+
+
         Log.d(TAG, "trying to connect to device: " + MAC);
         try{device = bluetoothAdapter.getRemoteDevice(MAC);
             Log.d(TAG, "device is found "+ MAC);
@@ -70,6 +79,7 @@ public class BluetoothPart {
 
 
         btThread = new BtThread(bluetoothSocket, device);
+        btThread.registerObserver(this);
         btThread.start();
         return true;
         }
@@ -81,6 +91,14 @@ public class BluetoothPart {
                     btThread.interrupt();
             }
 
+        }
+
+        public boolean isTreadCreated(){
+        return (btThread!=null);
+        }
+
+        public BtThread getBtThread(){
+            return  btThread;
         }
 
 

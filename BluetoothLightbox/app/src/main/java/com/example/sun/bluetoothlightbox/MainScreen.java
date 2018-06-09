@@ -1,5 +1,6 @@
 package com.example.sun.bluetoothlightbox;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -15,13 +16,14 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class MainScreen extends AppCompatActivity implements BluetoothPairedFragment.onFragmentResultListener {
+public class MainScreen extends AppCompatActivity implements BluetoothPairedFragment.onFragmentResultListener, Interfaces.Observer{
 
-    final String TAG ="lightbox";
+    final String TAG ="clock_lightbox";
     final int BLUETOOTH_ENABLE_REQUEST_CODE = 33;
     SharedPreferences sharedPreferences;
     BluetoothPart bt;
     boolean isBtPairedFlag=false;
+    boolean isBtConnectedFlag=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,12 +82,15 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
           case  R.id.menu_exit:
             this.finish();
             break;
-          case R.id.menu_config:
-
+          case R.id.menu_settings:
+            toast("the toast "+String.valueOf(isBtConnectedFlag));
             break;
 
           case R.id.menu_connect:
               connectBtDevice();
+              if (bt.isTreadCreated()){
+                  bt.getBtThread().registerObserver(this);
+              }
                break;
 
             case R.id.menu_disconnect:
@@ -118,8 +123,23 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
             }
         }
 
+    @Override
+    public void update(String status) {
+        switch (status){
+            case "btThreadConnected":
+                isBtConnectedFlag=true;
+                break;
+
+            case "btThreadDisconnected":
+                isBtConnectedFlag=false;
+                break;
+
+
+        }
+    }
+
     public void toast (String text){
-        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
 
 
     }
