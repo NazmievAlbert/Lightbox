@@ -101,5 +101,20 @@ public class BluetoothPart implements Interfaces.Observer {
             return  btThread;
         }
 
+        public void btSendColor(int number, int color){
+            if (btThread!=null) if(!btThread.isInterrupted()){ btThread.writeColor(number, color);}
+        //to send data
+
+        }
+
+        public void btSendString(String data){
+        if (btThread!=null) if(!btThread.isInterrupted()){
+            btThread.writeString(data);
+        }
+
+
+
+        }
+
 
 }

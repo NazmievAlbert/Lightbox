@@ -1,17 +1,24 @@
 package com.example.sun.bluetoothlightbox;
 
-import android.app.Activity;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
 import android.widget.Toast;
+
+import com.flask.colorpicker.ColorPickerView;
+import com.flask.colorpicker.OnColorChangedListener;
+import com.flask.colorpicker.OnColorSelectedListener;
+import com.flask.colorpicker.builder.ColorPickerClickListener;
+import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -24,6 +31,8 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
     BluetoothPart bt;
     boolean isBtPairedFlag=false;
     boolean isBtConnectedFlag=false;
+    int color_result=0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +92,9 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
             this.finish();
             break;
           case R.id.menu_settings:
-            toast("the toast "+String.valueOf(isBtConnectedFlag));
+            //toast("the toast "+String.valueOf(isBtConnectedFlag));                                //dark test magick todo make good code
+              chooseColor(33);
+
             break;
 
           case R.id.menu_connect:
@@ -213,4 +224,41 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
 
         }
     }
+
+
+    public boolean chooseColor(final int position){
+
+        final int ledPosition =position;
+        ColorPickerDialogBuilder
+                .with(this)
+                .setTitle("Choose color")
+                .lightnessSliderOnly()
+                .initialColor(Color.MAGENTA)
+                .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
+                .density(11)
+                .setPositiveButton("ok", new ColorPickerClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
+                        //Toast.makeText(getApplicationContext(), Integer.toHexString(selectedColor), Toast.LENGTH_SHORT).show();
+                        color_result=selectedColor;
+                        toast (Integer.toHexString(color_result));
+                        if(isBtConnectedFlag){
+                            //bt.btSendString(Integer.toHexString(color_result));
+                            bt.btSendColor(position,color_result);
+                        }
+                    }
+                })
+                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                })
+                .build()
+                .show();
+
+        return true;
+
+    }                                                                   //Dirty hack with global color
+
 }
+
