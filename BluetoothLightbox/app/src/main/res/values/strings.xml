@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">BluetoothLightbox</string>
+    <string name="pairedBt">Paired bluetooth devices</string>
+    <string name="btnOk">OK</string>
+    <string name="btnCancel">Cancel</string>
+    <string name="fragment_Bt_paired_title">Select paired bluetooth device</string>
+
+
+</resources>
