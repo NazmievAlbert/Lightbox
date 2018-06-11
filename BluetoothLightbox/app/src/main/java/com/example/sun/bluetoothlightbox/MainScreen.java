@@ -23,15 +23,15 @@ import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class MainScreen extends AppCompatActivity implements BluetoothPairedFragment.onFragmentResultListener, Interfaces.Observer{
+public class MainScreen extends AppCompatActivity implements BluetoothPairedFragment.onFragmentResultListener, Interfaces.Observer {
 
-    final String TAG ="clock_lightbox";
+    final String TAG = "clock_lightbox";
     final int BLUETOOTH_ENABLE_REQUEST_CODE = 33;
     SharedPreferences sharedPreferences;
     BluetoothPart bt;
-    boolean isBtPairedFlag=false;
-    boolean isBtConnectedFlag=false;
-    int color_result=0;
+    boolean isBtPairedFlag = false;
+    boolean isBtConnectedFlag = false;
+    int color_result = 0;
 
 
     @Override
@@ -46,7 +46,7 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
     @Override
     protected void onResume() {
         super.onResume();
-        if(isBtPairedFlag){
+        if (isBtPairedFlag) {
             connectBtDevice();
         }
 
@@ -55,14 +55,14 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean("isBtPairedFlag",isBtPairedFlag);
+        outState.putBoolean("isBtPairedFlag", isBtPairedFlag);
 
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        isBtPairedFlag=savedInstanceState.getBoolean("isBtPairedFlag");
+        isBtPairedFlag = savedInstanceState.getBoolean("isBtPairedFlag");
     }
 
     @Override
@@ -80,35 +80,35 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.setGroupVisible(R.id.menu_group_bluetooth_on,!isBtPairedFlag);
-        menu.setGroupVisible(R.id.menu_group_bluetooth_off,isBtPairedFlag);
+        menu.setGroupVisible(R.id.menu_group_bluetooth_on, !isBtPairedFlag);
+        menu.setGroupVisible(R.id.menu_group_bluetooth_off, isBtPairedFlag);
         return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()){
-          case  R.id.menu_exit:
-            this.finish();
-            break;
-          case R.id.menu_settings:
-            //toast("the toast "+String.valueOf(isBtConnectedFlag));                                //dark test magick todo make good code
-              chooseColor(33);
+        switch (item.getItemId()) {
+            case R.id.menu_exit:
+                this.finish();
+                break;
+            case R.id.menu_settings:
+                //toast("the toast "+String.valueOf(isBtConnectedFlag));                                //dark test magick todo make good code
+                chooseColor(33);
 
-            break;
+                break;
 
-          case R.id.menu_connect:
-              connectBtDevice();
-              if (bt.isTreadCreated()){
-                  bt.getBtThread().registerObserver(this);
-              }
-               break;
+            case R.id.menu_connect:
+                connectBtDevice();
+                if (bt.isTreadCreated()) {
+                    bt.getBtThread().registerObserver(this);
+                }
+                break;
 
             case R.id.menu_disconnect:
                 sharedPreferences = getPreferences(MODE_PRIVATE);
-                sharedPreferences.edit().putString("last_device","NULL").commit();
+                sharedPreferences.edit().putString("last_device", "NULL").commit();
                 bt.disconnectDevice();
-                isBtPairedFlag=false;
+                isBtPairedFlag = false;
 
                 break;
 
@@ -121,114 +121,114 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("activityResult", "requestCode = " + requestCode + ", resultCode = " + resultCode);
-               switch (requestCode){
-                    case BLUETOOTH_ENABLE_REQUEST_CODE:
-                        if (resultCode==RESULT_OK){                                                     // Bluetooth has been enabled
-                            Log.d(TAG,"bluetooth has been successfully enabled");
-                            //connectBtDevice();  //bug on sony xperia. locking the uuid
-                        }
-                        else{Log.e(TAG,"Bluetooth hasn't been enabled"); toast("Bluetooth hasn't been enabled");} // Bluetooth hasn't been enabled :(
+        switch (requestCode) {
+            case BLUETOOTH_ENABLE_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {                                                     // Bluetooth has been enabled
+                    Log.d(TAG, "bluetooth has been successfully enabled");
+                    //connectBtDevice();  //bug on sony xperia. locking the uuid
+                } else {
+                    Log.e(TAG, "Bluetooth hasn't been enabled");
+                    toast("Bluetooth hasn't been enabled");
+                } // Bluetooth hasn't been enabled :(
 
 
-                        break;
-            }
+                break;
         }
+    }
 
     @Override
     public void update(String status) {
-        switch (status){
+        switch (status) {
             case "btThreadConnected":
-                isBtConnectedFlag=true;
+                isBtConnectedFlag = true;
                 break;
 
             case "btThreadDisconnected":
-                isBtConnectedFlag=false;
+                isBtConnectedFlag = false;
                 break;
 
 
         }
     }
 
-    public void toast (String text){
+    public void toast(String text) {
         Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
 
 
     }
 
-    public void connectBtDevice(){
+    public void connectBtDevice() {
 
-        String deviceMAC="";
+        String deviceMAC = "";
         boolean isKnownBtExistsFlag = false;
-        sharedPreferences =getPreferences(MODE_PRIVATE);
-        String lastConnectedDevice = sharedPreferences.getString("last_device","NULL");
+        sharedPreferences = getPreferences(MODE_PRIVATE);
+        String lastConnectedDevice = sharedPreferences.getString("last_device", "NULL");
 
 
-        if(bt.isBluetoothSupported())  if(bt.isBluetoothOn()){
+        if (bt.isBluetoothSupported()) if (bt.isBluetoothOn()) {
             //get device list
-            Set<BluetoothDevice> deviceList =bt.showSetBondedDevices();
+            Set<BluetoothDevice> deviceList = bt.showSetBondedDevices();
 
 
-            for(BluetoothDevice device: deviceList){
+            for (BluetoothDevice device : deviceList) {
 
-                if (device.getAddress().equals(lastConnectedDevice)){       //If the last connected device is in paired device list
-                    isKnownBtExistsFlag=true;
-                    deviceMAC=device.getAddress();
+                if (device.getAddress().equals(lastConnectedDevice)) {       //If the last connected device is in paired device list
+                    isKnownBtExistsFlag = true;
+                    deviceMAC = device.getAddress();
                     break;
-                    }
+                }
 
 
             }
 
-            if(isKnownBtExistsFlag){                                        //If the last connected device is in paired device list
+            if (isKnownBtExistsFlag) {                                        //If the last connected device is in paired device list
 
-                toast("Connecting to: "+ deviceMAC);
+                toast("Connecting to: " + deviceMAC);
                 bt.connectDevice(deviceMAC);
-                isBtPairedFlag=true;
-            }
-            else{                                                       //If the last connected device isn't exists or last attempt was unsuccesfull
+                isBtPairedFlag = true;
+            } else {                                                       //If the last connected device isn't exists or last attempt was unsuccesfull
                 showPairedDevices(deviceList);
             }
 
+        } else {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, BLUETOOTH_ENABLE_REQUEST_CODE);
         }
-
-
-        else{Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent,BLUETOOTH_ENABLE_REQUEST_CODE);}
 
     }
 
-    public void showPairedDevices(Set<BluetoothDevice> btDevices){
+    public void showPairedDevices(Set<BluetoothDevice> btDevices) {
 
         BluetoothPairedFragment bluetoothPairedFragment = new BluetoothPairedFragment();
 
         ArrayList<String> deviceNameList = new ArrayList<>();
-        for(BluetoothDevice device: btDevices){
-            deviceNameList.add(device.getName()+" "+device.getAddress());
+        for (BluetoothDevice device : btDevices) {
+            deviceNameList.add(device.getName() + " " + device.getAddress());
         }
 
         Bundle btFragBundle = new Bundle();
-        btFragBundle.putStringArrayList("devices",deviceNameList);
+        btFragBundle.putStringArrayList("devices", deviceNameList);
         bluetoothPairedFragment.setArguments(btFragBundle);
 
-        bluetoothPairedFragment.show(getFragmentManager(),"btPairedList");
+        bluetoothPairedFragment.show(getFragmentManager(), "btPairedList");
 
     }
 
     @Override
     public void getFragmentResult(String tag, String result) {
-        if(tag.equals("paired")){
+        if (tag.equals("paired")) {
             //toast("!"+result);
             sharedPreferences = getPreferences(MODE_PRIVATE);
-            sharedPreferences.edit().putString("last_device",result).commit();
+            sharedPreferences.edit().putString("last_device", result).commit();
             connectBtDevice();
 
         }
     }
 
 
-    public boolean chooseColor(final int position){
+    public boolean chooseColor(final int position) {
 
-        final int ledPosition =position;
+        final int ledPosition = position;
         ColorPickerDialogBuilder
                 .with(this)
                 .setTitle("Choose color")
@@ -236,15 +236,21 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
                 .initialColor(Color.MAGENTA)
                 .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
                 .density(11)
+                .setOnColorSelectedListener(new OnColorSelectedListener() {
+                    @Override
+                    public void onColorSelected(int selectedColor) {
+                        bt.btFillLedColor(selectedColor);
+                    }
+                })
                 .setPositiveButton("ok", new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
                         //Toast.makeText(getApplicationContext(), Integer.toHexString(selectedColor), Toast.LENGTH_SHORT).show();
-                        color_result=selectedColor;
-                        toast (Integer.toHexString(color_result));
-                        if(isBtConnectedFlag){
+                        color_result = selectedColor;
+                        toast(Integer.toHexString(color_result));
+                        if (isBtConnectedFlag) {
                             //bt.btSendString(Integer.toHexString(color_result));
-                            bt.btSendColor(position,color_result);
+                            bt.btFillLedColor(color_result);
                         }
                     }
                 })

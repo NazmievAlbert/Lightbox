@@ -1,5 +1,6 @@
 package com.example.sun.bluetoothlightbox;
 
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -16,64 +17,65 @@ import java.util.Set;
 import java.util.UUID;
 
 public class BluetoothPart implements Interfaces.Observer {
-
-    final String TAG ="clock_bt_class";
+    static final byte COLOR_SINGLE=11, COLOR_SEQUENCE=12, COLOR_FILL=13, ANIMATION_FRAME_1=14, ANIMATION_FRAME_2=15, ANIMATION_STYLE=16;
+    final String TAG = "clock_bt_class";
 
     private BluetoothAdapter bluetoothAdapter;
-    private BluetoothSocket bluetoothSocket =null;
+    private BluetoothSocket bluetoothSocket = null;
     BluetoothDevice device = null;
-    private BtThread btThread =null;
+    private BtThread btThread = null;
 
 
-    public  BluetoothPart(){
+    public BluetoothPart() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
 
     @Override
     public void update(String status) {
-        Log.d(TAG,"GET INFO!!!! "+status);
+        Log.d(TAG, "GET INFO!!!! " + status);
     }
 
-    public boolean isBluetoothSupported(){
+    public boolean isBluetoothSupported() {
         if (bluetoothAdapter == null) {
-            Log.e(TAG,"BlueTooth is not supported on this device");
+            Log.e(TAG, "BlueTooth is not supported on this device");
             return false;
-        }
-        else{
-            Log.d(TAG,"bluetooth is supported");
+        } else {
+            Log.d(TAG, "bluetooth is supported");
             return true;
         }
     }
 
-    public boolean isBluetoothOn(){
+    public boolean isBluetoothOn() {
 
-        if (this.isBluetoothSupported()){
-        if (bluetoothAdapter.isEnabled()) {
-            Log.d(TAG,"bluetooth is on");
-            return true;
-        }
-        else{
-            Log.d(TAG,"bluetooth is disabled");
+        if (this.isBluetoothSupported()) {
+            if (bluetoothAdapter.isEnabled()) {
+                Log.d(TAG, "bluetooth is on");
+                return true;
+            } else {
+                Log.d(TAG, "bluetooth is disabled");
+                return false;
+            }
+        } else {
             return false;
         }
-    }else {return false;}
 
     }
 
-    public Set<BluetoothDevice> showSetBondedDevices(){
-        Set<BluetoothDevice> pairedDevices= bluetoothAdapter.getBondedDevices();
+    public Set<BluetoothDevice> showSetBondedDevices() {
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         return pairedDevices;
     }
 
-    public boolean connectDevice(String MAC){
+    public boolean connectDevice(String MAC) {
 
 
         Log.d(TAG, "trying to connect to device: " + MAC);
-        try{device = bluetoothAdapter.getRemoteDevice(MAC);
-            Log.d(TAG, "device is found "+ MAC);
-        }catch (ClassCastException e){
-            Log.e(TAG,  " device with MAC: "+MAC+" isn't found "+e.getClass()+e.getMessage() );
+        try {
+            device = bluetoothAdapter.getRemoteDevice(MAC);
+            Log.d(TAG, "device is found " + MAC);
+        } catch (ClassCastException e) {
+            Log.e(TAG, " device with MAC: " + MAC + " isn't found " + e.getClass() + e.getMessage());
             return false;
         }
 
@@ -82,39 +84,46 @@ public class BluetoothPart implements Interfaces.Observer {
         btThread.registerObserver(this);
         btThread.start();
         return true;
+    }
+
+    public void disconnectDevice() {
+
+        if (btThread != null) {
+            if (!btThread.isInterrupted())
+                btThread.interrupt();
         }
 
-        public void disconnectDevice(){
+    }
 
-            if(btThread!=null){
-                if(!btThread.isInterrupted())
-                    btThread.interrupt();
-            }
+    public boolean isTreadCreated() {
+        return (btThread != null);
+    }
 
-        }
+    public BtThread getBtThread() {
+        return btThread;
+    }
 
-        public boolean isTreadCreated(){
-        return (btThread!=null);
-        }
+    public void btSendLedColor(int position, int color) {
 
-        public BtThread getBtThread(){
-            return  btThread;
-        }
+        byte[] ret = new byte[5];
+        ret[4] = (byte) (color & 0xFF);
+        ret[3] = (byte) ((color >> 8) & 0xFF);
+        ret[2] = (byte) ((color >> 16) & 0xFF);
+        ret[1] = (byte) (position & 0xFF);
+        ret[0] = COLOR_SINGLE;
+        btThread.sendBytes(ret);
 
-        public void btSendColor(int number, int color){
-            if (btThread!=null) if(!btThread.isInterrupted()){ btThread.writeColor(number, color);}
-        //to send data
+    }
 
-        }
+    public void btFillLedColor(int color) {
+        byte[] ret = new byte[5];
+        ret[3] = (byte) (color & 0xFF);
+        ret[2] = (byte) ((color >> 8) & 0xFF);
+        ret[1] = (byte) ((color >> 16) & 0xFF);
+        ret[0] = COLOR_FILL;
+        btThread.sendBytes(ret);
 
-        public void btSendString(String data){
-        if (btThread!=null) if(!btThread.isInterrupted()){
-            btThread.writeString(data);
-        }
-
-
-
-        }
+    }
 
 
-}
+    }
