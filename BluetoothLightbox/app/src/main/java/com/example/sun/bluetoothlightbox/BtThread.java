@@ -2,6 +2,9 @@ package com.example.sun.bluetoothlightbox;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.res.Resources;
+import android.os.Handler;
+import android.os.Message;
 import android.os.ParcelUuid;
 import android.util.Log;
 
@@ -12,50 +15,30 @@ import java.util.List;
 import java.util.UUID;
 
 
-public class BtThread extends Thread implements Interfaces.Observable {
-    private List<Interfaces.Observer> observers;
+public class BtThread extends Thread  {
+
 
     final String TAG = "clock_bt_thread";
     private int connectAttempts = 0;
-    private String status = "created";
     private BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
     private boolean isConnectedFlag = false;
     private OutputStream outStream = null;
     private UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private Handler handler;
+    private Message msg;
+    private static final int max_attempts = 5;
 
 
-    public BtThread(BluetoothSocket socket, BluetoothDevice device) {
+    public BtThread(BluetoothSocket socket, BluetoothDevice device, Handler h) {
         mmSocket = socket;
         mmDevice = device;
-        observers = new LinkedList<>();
-    }
-
-
-    @Override
-    public void registerObserver(Interfaces.Observer o) {
-        observers.add(o);
-    }
-
-    @Override
-    public void removeObserver(Interfaces.Observer o) {
-        observers.remove(o);
-    }
-
-    @Override
-    public void notifyObservers() {
-        for (Interfaces.Observer observer : observers)
-            observer.update(status);
-    }
-
-    public void sendStatus(String status) {
-        this.status = status;
-        notifyObservers();
+        handler = h;
     }
 
     public void run() {
         do {
-            if (!Thread.interrupted() && connectAttempts < 5)    //Проверка прерывания
+            if (!Thread.interrupted() && connectAttempts < max_attempts)    //Проверка прерывания
             {
                 if (!isConnectedFlag) {
                     if (!connectBt()) connectAttempts++;
@@ -79,11 +62,20 @@ public class BtThread extends Thread implements Interfaces.Observable {
     private boolean connectBt() {
         boolean result = true;
 
+        if(createSocket()){
+            result=connectToSocket();
+        }
+
+        return result;
+    }
+
+    private boolean createSocket(){
+        boolean result =true;
         Log.d(TAG, "Trying to connect attempt #" + String.valueOf(connectAttempts + 1));
 
         if (connectAttempts > 2) {
-            ParcelUuid[] UUIDs = mmDevice.getUuids();
-            MY_UUID = UUIDs[connectAttempts % UUIDs.length].getUuid();
+            //ParcelUuid[] UUIDs = mmDevice.getUuids();
+            //MY_UUID = UUIDs[0].getUuid();
         }
 
         try {
@@ -91,19 +83,30 @@ public class BtThread extends Thread implements Interfaces.Observable {
             Log.d(TAG, "socket for " + mmDevice.getAddress() + " is created");
         } catch (IOException e) {
             Log.e(TAG, "socket create failed: " + e.getMessage() + ".");
+
+            msg = handler.obtainMessage(R.integer.BT_CONNECTION_ERROR, (connectAttempts+1), (max_attempts+1));          //Notify main activity
+            handler.sendMessage(msg);
             result = false;
         }
+        return result;
+    }
+
+    private boolean connectToSocket(){
+        boolean result =true;
 
         Log.d(TAG, "...Connecting to device: " + mmSocket.getRemoteDevice().getAddress() + "...");
         try {
             mmSocket.connect();                                                                             //Device is connected!!!!
             Log.d(TAG, "Device is connected");
-            sendStatus("btThreadConnected");
+            handler.sendEmptyMessage(R.integer.BT_DEVICE_CONNECTED);
             isConnectedFlag = true;
             outStream = mmSocket.getOutputStream();
+
         } catch (IOException e) {
             result = false;
             Log.e(TAG, "unable to connect socket trying to close the socket " + e.getMessage() + ".");
+            msg = handler.obtainMessage(R.integer.BT_CONNECTION_ERROR, connectAttempts, max_attempts);
+            handler.sendMessage(msg);
             try {
                 mmSocket.close();
                 Log.e(TAG, "the bluetooth socket is closed");
@@ -119,7 +122,7 @@ public class BtThread extends Thread implements Interfaces.Observable {
         try {
             mmSocket.close();
             Log.d(TAG, "socket succesfully closed");
-            sendStatus("btThreadDisonnected");
+            handler.sendEmptyMessage(R.integer.BT_DEVICE_DISCONNECTED);
 
         } catch (IOException e) {
             Log.e(TAG, "unable to close socket" + e.getMessage() + ".");
@@ -127,11 +130,9 @@ public class BtThread extends Thread implements Interfaces.Observable {
 
     }
 
-
     public void cancel() {
         disconnectBt();
     }
-
 
     public void writeString(String message) {
 
@@ -150,15 +151,16 @@ public class BtThread extends Thread implements Interfaces.Observable {
 
     }
 
-
     public void sendBytes(byte[] string) {
 
         if (outStream != null) {
             Log.d(TAG, "...Посылаем данные: ");
             try {
                 outStream.write(string);
+                handler.sendEmptyMessage(R.integer.BT_SEND_OK);
             } catch (IOException e) {
                 Log.e(TAG, "writeString: an exception occurred during write:" + e.getMessage());
+                handler.sendEmptyMessage(R.integer.BT_SEND_ERROR);
             }
 
         } else {

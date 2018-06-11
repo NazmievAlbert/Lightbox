@@ -8,6 +8,7 @@
     <string name="fragment_Bt_paired_title">Select paired bluetooth device</string>
     <string name="btConnected">Bluetooth device is connected</string>
     <string name="btDisconnected">Bluetooth device is disconnected</string>
+    <string name="btConnectionError">Connection failed</string>
 
 
 </resources>

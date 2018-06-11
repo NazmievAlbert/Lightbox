@@ -7,11 +7,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flask.colorpicker.ColorPickerView;
@@ -20,10 +23,11 @@ import com.flask.colorpicker.OnColorSelectedListener;
 import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class MainScreen extends AppCompatActivity implements BluetoothPairedFragment.onFragmentResultListener, Interfaces.Observer {
+public class MainScreen extends AppCompatActivity implements BluetoothPairedFragment.onFragmentResultListener {
 
     final String TAG = "clock_lightbox";
     final int BLUETOOTH_ENABLE_REQUEST_CODE = 33;
@@ -31,16 +35,18 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
     BluetoothPart bt;
     boolean isBtPairedFlag = false;
     boolean isBtConnectedFlag = false;
+    TextView tvStatus;
     int color_result = 0;
+    Handler handler;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
-        bt = new BluetoothPart();
-
-
+        handler = new MyHandler(this);
+        bt = new BluetoothPart(handler);
+        tvStatus = (TextView) findViewById(R.id.main_screen_status);
     }
 
     @Override
@@ -99,9 +105,6 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
 
             case R.id.menu_connect:
                 connectBtDevice();
-                if (bt.isTreadCreated()) {
-                    bt.getBtThread().registerObserver(this);
-                }
                 break;
 
             case R.id.menu_disconnect:
@@ -137,18 +140,10 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
     }
 
     @Override
-    public void update(String status) {
-        switch (status) {
-            case "btThreadConnected":
-                isBtConnectedFlag = true;
-                break;
-
-            case "btThreadDisconnected":
-                isBtConnectedFlag = false;
-                break;
-
-
-        }
+    protected void onDestroy() {
+        if (handler != null)
+            handler.removeCallbacksAndMessages(null);
+        super.onDestroy();
     }
 
     public void toast(String text) {
@@ -265,6 +260,47 @@ public class MainScreen extends AppCompatActivity implements BluetoothPairedFrag
         return true;
 
     }                                                                   //Dirty hack with global color
+
+    static class MyHandler extends Handler {
+
+        WeakReference<MainScreen> wrActivity;
+
+        public MyHandler(MainScreen activity) {
+            wrActivity = new WeakReference<MainScreen>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            MainScreen activity = wrActivity.get();
+            if (activity != null){
+
+                activity.tvStatus.setText(String.valueOf(msg.what));
+                switch (msg.what){
+                    case R.integer.BT_DEVICE_CONNECTED:
+                        activity.tvStatus.setText(activity.getResources().getString(R.string.btConnected));
+                        activity.isBtConnectedFlag=true;
+                        break;
+                    case R.integer.BT_DEVICE_DISCONNECTED:
+                        activity.tvStatus.setText(activity.getResources().getString(R.string.btDisconnected));
+                        activity.isBtConnectedFlag=false;
+                        break;
+                    case R.integer.BT_CONNECTION_ERROR:
+                        activity.tvStatus.setText("Connection Failed at "+String.valueOf(msg.arg1)+" attempt from" +String.valueOf(msg.arg2));
+                        activity.isBtConnectedFlag=false;
+                        break;
+                    case R.integer.BT_SEND_ERROR:
+                        activity.tvStatus.setText("Failed to send data");
+                        break;
+
+                    case R.integer.BT_SEND_OK:
+                        activity.tvStatus.setText("Data successfully sended");
+                        break;
+                }
+            }
+
+        }
+    }
 
 }
 

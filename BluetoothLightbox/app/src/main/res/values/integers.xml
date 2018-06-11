@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="BT_DEVICE_CONNECTED">11</integer>
+    <integer name="BT_CONNECTION_ERROR">22</integer>
+    <integer name="BT_DEVICE_DISCONNECTED">33</integer>
+    <integer name="BT_SEND_ERROR">101</integer>
+    <integer name="BT_SEND_OK">103</integer>
+
+
+</resources>

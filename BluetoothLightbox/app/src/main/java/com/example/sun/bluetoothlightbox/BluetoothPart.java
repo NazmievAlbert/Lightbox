@@ -4,6 +4,7 @@ package com.example.sun.bluetoothlightbox;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+
 public class BluetoothPart implements Interfaces.Observer {
     static final byte COLOR_SINGLE=11, COLOR_SEQUENCE=12, COLOR_FILL=13, ANIMATION_FRAME_1=14, ANIMATION_FRAME_2=15, ANIMATION_STYLE=16;
     final String TAG = "clock_bt_class";
@@ -24,10 +26,11 @@ public class BluetoothPart implements Interfaces.Observer {
     private BluetoothSocket bluetoothSocket = null;
     BluetoothDevice device = null;
     private BtThread btThread = null;
+    private Handler handler;
 
-
-    public BluetoothPart() {
+    public BluetoothPart(Handler h) {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        handler = h;
     }
 
 
@@ -80,8 +83,8 @@ public class BluetoothPart implements Interfaces.Observer {
         }
 
 
-        btThread = new BtThread(bluetoothSocket, device);
-        btThread.registerObserver(this);
+        btThread = new BtThread(bluetoothSocket, device, handler);
+
         btThread.start();
         return true;
     }
